@@ -52,6 +52,7 @@ X_test, Y_test = data_generator(1000, seq_length)
 
 
 # Note: We use a very simple setting here (assuming all levels have the same # of channels.
+# default param: nhid=30; levels=8 -> include 2**8 = 254; k_size=7;
 channel_sizes = [args.nhid]*args.levels
 kernel_size = args.ksize
 dropout = args.dropout
@@ -74,6 +75,7 @@ def train(epoch):
     batch_idx = 1
     total_loss = 0
     for i in range(0, X_train.size()[0], batch_size):
+        # to make final batch if the sample of left data is less then batch size
         if i + batch_size > X_train.size()[0]:
             x, y = X_train[i:], Y_train[i:]
         else:
@@ -104,9 +106,15 @@ def evaluate():
     return test_loss.data[0]
 
 
-for ep in range(1, epochs+1):
-    train(ep)
-    tloss = evaluate()
-
-
+if __name__ == "__main__":
+    phase = 'test'
+    path = "TCN/adding_problem/output/series.param"
+    if phase == 'train':
+        for ep in range(1, epochs+1):
+            train(ep)
+            tloss = evaluate()
+        torch.save(model.state_dict(), path)
+    else:
+        model.load_state_dict(torch.load(path))
+        tloss = evaluate()
 
